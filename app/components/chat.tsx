@@ -5,6 +5,7 @@ import Image from "next/image";
 import CustomSvg from "./icon-human";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { motion } from "framer-motion";
 
 interface Message {
   id: number;
@@ -13,7 +14,7 @@ interface Message {
 }
 
 const botResponses = [
-  "Hello! How can I assist you today?",
+  " I'm not sure I understand. Could you please rephrase that?",
   "That's an interesting question. Let me think about it.",
   "I'm here to help. What else would you like to know?",
   "I understand. Could you please provide more details?",
@@ -23,7 +24,14 @@ const botResponses = [
 gsap.registerPlugin(ScrollTrigger);
 
 function Chat() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: Date.now(),
+      text: `Welcome, seeker, to my lair of fate and whispers. The winds have brought you here, and the answers you seek lie in the realm of the unknown.
+Speak your question, and let the fates guide my wisdom to you`,
+      isBot: true,
+    },
+  ]);
   const [input, setInput] = useState("");
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
@@ -57,8 +65,11 @@ function Chat() {
         const fadeDistance = 50; // Range over which fading occurs
 
         const opacity =
-          distanceFromTop < fadeThreshold && messages.length >= 4
-            ? Math.max(0, 1 - (fadeThreshold - distanceFromTop) / fadeDistance)
+          distanceFromTop < fadeThreshold && messages.length > 4
+            ? Math.max(
+                0.1,
+                1 - (fadeThreshold - distanceFromTop) / fadeDistance
+              )
             : 1;
 
         gsap.to(box, { opacity, duration: 0.2 });
@@ -121,7 +132,16 @@ function Chat() {
 
   return (
     <div className="absolute h-[85dvh] flex flex-col justify-end gap-6 sm:right-5 bottom-[50px] overflow-hidden lg:w-[20vw] sm:w-[40vw] px-6 sm:px-0 w-[100dvw] bg-transparent">
-      <div
+      <motion.div
+        initial={{ opacity: 0, scale: 0.7, y: 150 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{
+          duration: 0.6,
+          ease: "easeInOut",
+          type: "spring",
+          stiffness: 260,
+          damping: 20,
+        }}
         ref={chatContainerRef}
         className="flex flex-col gap-6 hide-scrollbar overflow-y-auto"
       >
@@ -156,7 +176,7 @@ function Chat() {
           </div>
         ))}
         <div ref={lastMessageRef} />
-      </div>
+      </motion.div>
       <form onSubmit={handleSubmit} className="relative">
         <textarea
           className="w-full txta outline-none p-4 text-sm hide-scrollbar"

@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import CustomSvg from "./icon-human";
 import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 interface Message {
   id: number;
@@ -26,6 +27,30 @@ function Chat() {
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = chatContainerRef.current;
+    if (!container) return;
+
+    const messageBoxes = gsap.utils.toArray(".message-box");
+
+    messageBoxes.forEach((box) => {
+      const element = box as HTMLDivElement;
+
+      gsap.to(element, {
+        opacity: 0,
+        scrollTrigger: {
+          trigger: element,
+          containerAnimation: gsap.to(container, {
+            scrollTop: container.scrollHeight - container.clientHeight,
+          }),
+          start: "top center",
+          end: "bottom center",
+          scrub: true,
+        },
+      });
+    });
+  }, [messages]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
