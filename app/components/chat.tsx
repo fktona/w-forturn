@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import CustomSvg from "./icon-human";
-import { AnimatedText2 } from "./animation";
 import Image from "next/image";
+import CustomSvg from "./icon-human";
+import { gsap } from "gsap";
 
 interface Message {
   id: number;
@@ -22,38 +22,55 @@ const botResponses = [
 function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const lastMessageRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  useEffect(scrollToBottom, [messages]);
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   useEffect(() => {
-    const options = {
-      root: chatContainerRef.current,
-      rootMargin: "0px",
-      threshold: Array.from({ length: 101 }, (_, i) => i / 100), // Generate 0.01 to 1 thresholds
+    const container = chatContainerRef.current;
+    if (!container) return;
+
+    const fadeOutMessages = () => {
+      const messageBoxes = Array.from(
+        container.getElementsByClassName("message-box")
+      ) as HTMLDivElement[];
+
+      messageBoxes.forEach((box, index) => {
+        const boxRect = box.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+
+        const distanceFromTop = boxRect.top - containerRect.top;
+
+        // Adjust fade based on distance
+
+        const fadeThreshold = 100; // Distance in pixels to start fading
+        const fadeDistance = 50; // Range over which fading occurs
+
+        const opacity =
+          distanceFromTop < fadeThreshold && messages.length >= 4
+            ? Math.max(0, 1 - (fadeThreshold - distanceFromTop) / fadeDistance)
+            : 1;
+
+        gsap.to(box, { opacity, duration: 0.2 });
+      });
     };
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.target instanceof HTMLElement) {
-          // Adjust opacity based on visibility
-          const opacity = Math.max(0.25, entry.intersectionRatio); // Min opacity of 0.25
-          entry.target.style.opacity = opacity.toString();
-        }
-      });
-    }, options);
+    const observer = new ResizeObserver(fadeOutMessages);
+    observer.observe(container);
 
-    const messageElements =
-      chatContainerRef.current?.querySelectorAll(".message-box");
-    messageElements?.forEach((el) => observer.observe(el));
+    container.addEventListener("scroll", fadeOutMessages);
+    fadeOutMessages();
 
     return () => {
-      messageElements?.forEach((el) => observer.unobserve(el));
+      observer.disconnect();
+      container.removeEventListener("scroll", fadeOutMessages);
     };
   }, [messages]);
 
@@ -77,7 +94,7 @@ function Chat() {
   };
 
   return (
-    <div className="absolute h-[76dvh] flex flex-col justify-end gap-6 sm:right-5 bottom-5 overflow-hidden lg:w-[20vw] sm:w-[40vw] px-6 sm:px-0 w-[100dvw] bg-transparent">
+    <div className="absolute h-[85dvh] flex flex-col justify-end gap-6 sm:right-5 bottom-[50px] overflow-hidden lg:w-[20vw] sm:w-[40vw] px-6 sm:px-0 w-[100dvw] bg-transparent">
       <div
         ref={chatContainerRef}
         className="flex flex-col gap-6 hide-scrollbar overflow-y-auto"
@@ -104,7 +121,7 @@ function Chat() {
               className={message.isBot ? "botmsg text-sm" : "humanmsg text-sm"}
             >
               {message.isBot ? (
-                <AnimatedText2 text={message.text} />
+                message.text
               ) : (
                 <span className="text-ellipsis"> {message.text}</span>
               )}
@@ -112,14 +129,14 @@ function Chat() {
             {!message.isBot && <CustomSvg className="min-w-8 aspect-square" />}
           </div>
         ))}
-        <div ref={messagesEndRef} />
+        <div ref={lastMessageRef} />
       </div>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="relative">
         <textarea
-          className="w-full txta outline-none p-4 text-sm"
+          className="w-full txta outline-none p-4 text-sm hide-scrollbar"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message here..."
+          placeholder="Ask fortune teller question..."
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
@@ -127,6 +144,15 @@ function Chat() {
             }
           }}
         ></textarea>
+        <button className="absolute right-3 bottom-4" onClick={handleSubmit}>
+          <Image
+            src="/send.png"
+            alt="send"
+            width={1000}
+            height={1000}
+            className="rounded-full relative w-4 aspect-square"
+          />
+        </button>
       </form>
     </div>
   );

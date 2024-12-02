@@ -4,6 +4,7 @@ import Chat from "./components/chat";
 export default function Home() {
   return (
     <div className="sketchfab-embed-wrapper">
+      <div className="absolute top-0 left-0 w-full h-[43px] bg-black " />
       <iframe
         className="relative -z-10"
         title="Witch's room"
@@ -17,9 +18,9 @@ export default function Home() {
           height: "100%",
         }}
         allow="autoplay; fullscreen; xr-spatial-tracking"
-        src="https://sketchfab.com/models/20f9fbe5a5fe46a2b324b0c545a6454d/embed?autostart=1&preload=1"
+        src="https://sketchfab.com/models/20f9fbe5a5fe46a2b324b0c545a6454d/embed?autostart=1&preload=1&ui_settings=0"
       ></iframe>
-      <p
+      {/* <p
         style={{
           fontSize: "13px",
           fontWeight: "normal",
@@ -53,8 +54,9 @@ export default function Home() {
         >
           Sketchfab
         </a>
-      </p>
+      </p> */}
       <Chat />
+      <div className="absolute bottom-0 left-0 w-full h-[43px] bg-black " />
     </div>
   );
 }
