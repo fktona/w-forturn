@@ -23,15 +23,15 @@ const botResponses = [
 
 gsap.registerPlugin(ScrollTrigger);
 
-function Chat() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: Date.now(),
-      text: `Welcome, seeker, to my lair of fate and whispers. The winds have brought you here, and the answers you seek lie in the realm of the unknown.
+const firstMessage: Message = {
+  id: Date.now(),
+  text: `Welcome, seeker, to my lair of fate and whispers. The winds have brought you here, and the answers you seek lie in the realm of the unknown.
 Speak your question, and let the fates guide my wisdom to you`,
-      isBot: true,
-    },
-  ]);
+  isBot: true,
+};
+
+function Chat() {
+  const [messages, setMessages] = useState<Message[]>([firstMessage]);
   const [input, setInput] = useState("");
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
@@ -88,22 +88,49 @@ Speak your question, and let the fates guide my wisdom to you`,
     };
   }, [messages]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
       const newMessage: Message = { id: Date.now(), text: input, isBot: false };
       setMessages((prevMessages) => [...prevMessages, newMessage]);
       setInput("");
 
-      // Simulate bot response
-      setTimeout(() => {
-        const botResponse: Message = {
+      try {
+        const response = await fetch(
+          "https://fortunebot-6dmf.onrender.com/fortune-bot/fortune",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ prompt: input }),
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          const botResponse: Message = {
+            id: Date.now(),
+            text: data.reply,
+            isBot: true,
+          };
+          setMessages((prevMessages) => [...prevMessages, botResponse]);
+        } else {
+          const errorResponse: Message = {
+            id: Date.now(),
+            text: "Something went wrong. Please try again.",
+            isBot: true,
+          };
+          setMessages((prevMessages) => [...prevMessages, errorResponse]);
+        }
+      } catch (error) {
+        const errorResponse: Message = {
           id: Date.now(),
-          text: botResponses[Math.floor(Math.random() * botResponses.length)],
+          text: "Network error. Please check your connection and try again.",
           isBot: true,
         };
-        setMessages((prevMessages) => [...prevMessages, botResponse]);
-      }, 1000);
+        setMessages((prevMessages) => [...prevMessages, errorResponse]);
+      }
     }
   };
   useEffect(() => {
