@@ -209,7 +209,7 @@ function Chat() {
           className="w-full txta outline-none p-4 text-sm hide-scrollbar"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask fortune teller question..."
+          placeholder="Have your fortune read..."
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
